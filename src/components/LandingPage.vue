@@ -22,7 +22,7 @@ export default {
   },
   methods: {
     logIn() {
-      console.log("HALLO");
+      this.$router.push({ name: 'formPage' })
     },
   },
 }

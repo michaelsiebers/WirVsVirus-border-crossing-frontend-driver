@@ -1,18 +1,22 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <LandingPage/>
+    <ul class="nav">
+      <li class="nav-item">
+        <router-link class="nav-link active" :to="{ name: 'landingPage'}">LogIn</router-link>
+      </li>
+      <li class="nav-item">
+        <router-link class="nav-link active" :to="{ name: 'formPage'}">Form</router-link>
+      </li>
+    </ul>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import LandingPage from './components/LandingPage.vue'
 
 export default {
-  name: 'App',
-  components: {
-    LandingPage
-  }
+  name: 'App'
 }
 </script>
 
