@@ -11,9 +11,9 @@ Vue.use(VueRouter);
 const router = new VueRouter({
   routes: [
     {
-      path: '/formPage',
+      path: '/formPage/',
       name: 'formPage',
-      component: FormPage
+      component: FormPage,
     },
     {
       path: '/',

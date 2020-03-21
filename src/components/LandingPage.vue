@@ -14,7 +14,7 @@ export default {
   name: 'LandingPage',
   data: function() {
     return {
-
+      fields: ['Name', 'Telefonnummer', 'Last Name'],
     }
   },
   mounted: function() {
@@ -22,7 +22,8 @@ export default {
   },
   methods: {
     logIn() {
-      this.$router.push({ name: 'formPage' })
+      var fields = this.fields;
+      this.$router.push({ name: 'formPage', params: { fields } })
     },
   },
 }
