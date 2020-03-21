@@ -7,13 +7,11 @@
 
 <script>
 import LandingPage from './components/LandingPage.vue'
-import FormPage from './components/FormPage'
 
 export default {
   name: 'App',
   components: {
-    LandingPage,
-    FormPage
+    LandingPage
   }
 }
 </script>
