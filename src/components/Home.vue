@@ -1,56 +1,58 @@
 <template>
   <div>
-    <h3 style="text-align: center">Please select Start-, Destination- and Transit-Countries</h3>
-    <form>
+    <h3 style="text-align: center; margin-bottom: 30px">Please select Countries</h3>
+    <form style="margin-left: 30px; margin-right: 40px">
       <div class="form-group row">
         <div class="col">
           <label for="startSelect">Start Country</label>
-          <select class="form-control" id="startSelect" v-model="start">
+          <select class="form-control" id="startSelect" v-model="start.country">
             <option disabled selected>--Please Select--</option>
             <option :disabled="!countriesFiltered.includes(country)" v-for="country in countries" :key="country.id" v-bind:value="country.id">{{country.name}}</option>
           </select>
         </div>
         <div class="col">
-          <label for="startDate">Date of Arrival</label>
-          <input type="date" class="form-control" id="startDate">
+          <label for="startDate">Date of Start</label>
+          <input v-model="start.date" type="date" class="form-control" id="startDate">
         </div>
       </div>
 
-      <div v-for="n in transits.length" :key="transits[n-1]" class="form-group row">
+      <div style="display: flex; height: 100%;" v-for="n in transits.length" :key="transits[n-1].country" class="form-group row">
         <div class="col">
           <label :for="n">Transit Country</label>
-          <select class="form-control" :id="n" v-model="transits[n - 1]">
-            <option @click.stop="removeTransit" :id="transits[n - 1]">--Remove--</option>
+          <select class="form-control" :id="n" v-model="transits[n - 1].country">
             <option :disabled="!countriesFiltered.includes(country)" v-for="country in countries" :key="country.id" v-bind:value="country.id" >{{country.name}}</option>
           </select>
         </div>
+        <div style="height: 50%;display: inline-block; align-self: flex-end;">
+          <button class="btn btn-danger" @click.stop="removeTransit" :id="transits[n - 1].country">-</button>
+        </div>
         <div class="col">
           <label for="n+'transitDate'">Date of Arrival</label>
-          <input type="date" class="form-control" :id="n+'transitDate'">
+          <input v-model="transits[n - 1].date" type="date" class="form-control" :id="n+'transitDate'">
         </div>
       </div>
 
-      <div>
-        <button style="margin-bottom: 10px;" @click.stop="addTransit" type="button" class="btn btn-primary">Add Transit</button>
+      <div style="margin-bottom: 10px; text-align: center;">
+        <button @click.stop="addTransit" type="button" class="btn btn-secondary">Add Transit</button>
       </div>
 
       <div class="form-group row">
         <div class="col">
           <label for="destinationSelect">Destination Country</label>
-          <select class="form-control" id="destinationSelect" v-model="destination">
+          <select class="form-control" id="destinationSelect" v-model="destination.country">
             <option disabled selected>--Please Select--</option>
             <option :disabled="!countriesFiltered.includes(country)" v-for="country in countries" :key="country.id" v-bind:value="country.id">{{country.name}}</option>
           </select>
         </div>
         <div class="col">
           <label for="destinationDate">Date of Arrival</label>
-          <input type="date" class="form-control" id="destinationDate">
+          <input v-model="destination.date" type="date" class="form-control" id="destinationDate">
         </div>
       </div>
     </form>
 
-    <div style="text-align: center; margin-top: 30px">
-      <button @click.stop="output" type="button" class="btn btn-primary">Start</button>
+    <div style="text-align: center; margin-top: 30px; margin-bottom: 50px">
+      <button @click.stop="loadForm" type="button" class="btn btn-primary">Start</button>
     </div>
 
 
@@ -58,6 +60,9 @@
 </template>
 
 <script>
+  import axios from 'axios';
+
+
 export default {
   name: 'Home',
   data: function() {
@@ -65,8 +70,8 @@ export default {
       countries: [],
       countriesFiltered: [],
       transits: [],
-      start: null,
-      destination: null,
+      start: {},
+      destination: {},
     }
   },
   mounted: function() {
@@ -74,61 +79,75 @@ export default {
     this.filterCountries();
   },
   methods: {
-    output() {
-      console.log(this.start);
-      console.log(this.destination);
-      console.log(this.transits);
-      console.log(' ');
-      console.log(this.countries);
-      console.log('_');
-      console.log(this.countriesFiltered);
-    },
     addTransit() {
       if(this.countriesFiltered.length > 0) {
-        this.transits.push(this.countriesFiltered[0].id);
+        this.transits.push({country: this.countriesFiltered[0].id, date: null});
       } else {
         alert("No more transits possible");
       }
     },
     removeTransit(event) {
-      const transit = event.target.id;
-      this.transits.splice(this.transits.findIndex(t => t === transit), 1);
+      const country = event.target.id;
+      this.transits.splice(this.transits.findIndex(t => t.country === country), 1);
     },
     loadCountries() {
-      //TODO REST Call um Länder zu bekommen
+      axios.get(process.env.VUE_APP_BACKEND + 'api/country/list')
+              .then(response => {
+                console.log(response);
+                response.forEach(c => this.countries.push({id: c.pkey, name: c.countryname}))
+              })
+              .catch(e => {
+                console.log(e);
+              });
       this.countries.push({id: '0', name: 'Germany'});
       this.countries.push({id: '1', name: 'France'});
       this.countries.push({id: '2', name: 'Poland'});
+      this.countries.push({id: '3', name: 'Switzerland'});
     },
     filterCountries() {
       this.countriesFiltered = [].concat(this.countries);
-      this.countriesFiltered.splice(this.countriesFiltered.findIndex(c => c.id === this.start), 1);
-      this.countriesFiltered.splice(this.countriesFiltered.findIndex(c => c.id === this.destination), 1);
+      if (this.start.country !== undefined) {
+        this.countriesFiltered.splice(this.countriesFiltered.findIndex(c => c.id === this.start.country), 1);
+      }
+      if (this.destination.country !== undefined) {
+        this.countriesFiltered.splice(this.countriesFiltered.findIndex(c => c.id === this.destination.country), 1);
+      }
       for (var i = 0; i < this.transits.length; i++)
-        this.countriesFiltered.splice(this.countriesFiltered.findIndex(c => c.id === this.transits[i]), 1);
+        this.countriesFiltered.splice(this.countriesFiltered.findIndex(c => c.id === this.transits[i].country), 1);
     },
     loadForm() {
       //TODO Validation
-      var sFields = [];
 
-      //TODO GET general fields
-      let gFields = [{id: '0', name: 'name', type: 'text'}, {id: '1', name: 'sick', type: 'checkbox'}, {id: '2', name: 'age', type: 'number'}, {id: '3', name: 'date of birth', type: 'date'}, {id: '4', name: 'Email', type: 'email'}];
+      axios.post(process.env.VUE_APP_BACKEND + 'api/form/field/list', {
+        body: this.start.country
+      })
+              .then(response => {
+                console.log(response);
+                var company = response.filter(f => f.forEntity === 'Company');
+                company.forEach(f => delete f.forEntity);
+                company.forEach(f => delete f.country);
+                company.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
+                var driver = response.filter(f => f.forEntity === 'Driver');
+                driver.forEach(f => delete f.forEntity);
+                driver.forEach(f => delete f.country);
+                driver.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
+                var fields = [{name: 'Driver', fields: driver}, {name: 'Company', fields: company}];
+                this.routeToForm(this.countries, this.start, this.destination, this.transits, fields);
+              })
+              .catch(e => {
+                console.log(e);
+                var gFields = [{name: 'Driver', fields: [{name: 'Name', datatype: 'text'}, {name: 'Age', datatype: 'number'}]}, {name: 'Company', fields: [{name: 'Name', datatype: 'text'}, {name: 'Street Number', datatype: 'number'}]}];
+                var sendObject = {};
+                for (let category of gFields ) {
+                  sendObject[category.name] = {};
 
-      for (let transit in this.transits) {
-        console.log(transit);
-        //TODO GET Fields for this transit
-        let tFields = [{id: '5', name: 'name', type: 'text'}, {id: '6', name: 'sick', type: 'checkbox'}, {id: '7', name: 'age', type: 'number'}, {id: '8', name: 'date of birth', type: 'date'}, {id: '9', name: 'Email', type: 'email'}];
-        sFields.push(tFields);
-      }
-
-      //TODO GET Fields for destination
-      let dFields = [{id: '10', name: 'name', type: 'text'}, {id: '11', name: 'sick', type: 'checkbox'}, {id: '12', name: 'age', type: 'number'}, {id: '13', name: 'date of birth', type: 'date'}, {id: '14', name: 'Email', type: 'email'}];
-      sFields.push(dFields);
-
-      this.routeToForm(this.countries, this.start, this.destination, this.transits, gFields, sFields);
+                }
+                console.log(gFields);
+                this.routeToForm(this.countries, this.start, this.destination, this.transits, gFields, sendObject);
+              });
     },
-    routeToForm(countries, start, destination, transits, gFields, sFields) {
-      this.$router.push({ name: 'formPage', params: { countries, start, destination, transits, gFields, sFields } })
+    routeToForm(countries, start, destination, transits, gFields, sendObject) {
+      this.$router.push({ name: 'formPage', params: { countries, start, destination, transits, gFields, sendObject } })
     },
   },
   watch: {

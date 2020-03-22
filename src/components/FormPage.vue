@@ -1,77 +1,105 @@
 <template>
     <div>
-        <h3>Form</h3>
-        <div class="card">
+        <h3 style="text-align: center">Please Fill Out the Following Information</h3>
+        <div class="card" v-for="(category, index) in gFields" :key="index">
             <div class="card-body">
-                <h5 class="card-title">General Information</h5>
+                <h5 class="card-title">{{category.name}} Information</h5>
                 <div class="form-check">
-                    <div class="form-group" v-for="(field, index) in sFields[0]" :key="field.id">
-                        <div v-if="field.type!=='checkbox'">
-                            <label :for="index">{{field.name}}</label>
-                            <input :type="field.type" class="form-control" :id="index">
-                        </div>
-
-                        <div v-if="field.type==='checkbox'">
-                            <input :type="field.type" class="form-check-input" :id="index">
-                            <label :for="index" class="form-check-label">{{field.name}}</label>
-                        </div>
+                    <div class="form-group" v-for="(field, index) in category.fields" :key="field.name">
+                        <label :for="index">{{field.name}}</label>
+                        <input v-model="sendObject[category.name][field.name]" :type="field.datatype" class="form-control" :id="index">
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card" v-for="(fields, index) in sFields" :key="index">
-            <div class="card-body">
-                <h5 class="card-title">Information for {{index === sFields.length - 1 ? countries.find(c => c.id === destination).name : countries.find(c => c.id === transits[index]).name}}</h5>
-                <div class="form-check">
-                    <div class="form-group" v-for="(field, index) in fields" :key="field.id">
-                        <div v-if="field.type!=='checkbox'">
-                            <label :for="index">{{field.name}}</label>
-                            <input :type="field.type" class="form-control" :id="index">
-                        </div>
-
-                        <div v-if="field.type==='checkbox'">
-                            <input :type="field.type" class="form-check-input" :id="index">
-                            <label :for="index" class="form-check-label">{{field.name}}</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div style="text-align: center; margin-top: 30px; margin-bottom: 30px">
+            <button @click.stop="generateQr" class="btn btn-primary">Generate QR-Code</button>
         </div>
-
+        <div style="text-align: center; margin-top: 30px; margin-bottom: 30px" v-if="generated">
+            <p>Use this code to identify at the border</p>
+            <qrcode-vue id="cnv" :value="codeId" size="300"></qrcode-vue>
+            <button @click.stop="downloadQR" class="btn btn-primary">Download</button>
+        </div>
     </div>
 </template>
 
 <script>
+    import axios from "axios";
+    import QrcodeVue from 'qrcode.vue'
+
     export default {
         name: "FormPage",
         props: {
             countries: Array,
-            start: String,
-            destination: String,
+            start: Object,
+            destination: Object,
             transits: Array,
             gFields: Array,
-            sFields: Array,
+            sendObject: Object,
+        },
+        components: {
+            QrcodeVue,
         },
         data: function() {
             return {
-
+                codeId: '',
+                generated: false,
             }
         },
         mounted: function() {
-            this.output();
+            document.getElementById("dl").addEventListener('click', this.downloadQR, false);
         },
         methods: {
-            output() {
-                console.log(this.destination);
-                console.log(' ');
-                console.log(this.gFields);
-                console.log(' ');
-                for (var i = 0; i < this.sFields.length; i++) {
-                    console.log(this.sFields[i]);
-                    console.log(' ');
+            generateQr() {
+                //TODO Validate
+
+                this.sendObject['Tour'] = [];
+                var tourArray = [];
+                tourArray.push(this.start);
+                tourArray = tourArray.concat(this.transits);
+                tourArray.push(this.destination);
+                var i = 0;
+                var j = 1;
+                for (i, j; i < tourArray.length - 1; i++) {
+                    let rideFrom = tourArray[i].country;
+                    let rideTo = tourArray[j].country;
+                    let date = tourArray[j].date;
+                    this.sendObject.Tour.push({ridefrom: rideFrom, rideto: rideTo, date: date});
+                    j++;
                 }
+
+                const me = this;
+                axios.post(process.env.VUE_APP_BACKEND + 'api/border/cross/add', {
+                    body: me.sendObject
+                })
+                    .then(response => {
+                        //TODO Get ID for QR Code
+                        this.codeId = response.id;
+                        this.generated = true;
+                    })
+                    .catch(e => {
+                        console.log(e);
+                        this.generated = true;
+                    });
+
             },
+            downloadQR() {
+                var canvas = document.getElementById('cnv').firstChild;
+                var lnk = document.createElement('a'), e;
+                lnk.download = 'QRCode';
+                lnk.href = canvas.toDataURL("image/png;base64");
+                if (document.createEvent) {
+                    e = document.createEvent("MouseEvents");
+                    e.initMouseEvent("click", true, true, window,
+                        0, 0, 0, 0, 0, false, false, false,
+                        false, 0, null);
+
+                    lnk.dispatchEvent(e);
+                } else if (lnk.fireEvent) {
+                    lnk.fireEvent("onclick");
+                }
+            }
         }
     }
 </script>
