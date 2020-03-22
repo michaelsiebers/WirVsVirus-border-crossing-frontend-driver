@@ -48,7 +48,6 @@
             }
         },
         mounted: function() {
-            document.getElementById("dl").addEventListener('click', this.downloadQR, false);
         },
         methods: {
             generateQr() {
@@ -68,7 +67,6 @@
                     this.sendObject.Tour.push({ridefrom: rideFrom, rideto: rideTo, date: date});
                     j++;
                 }
-
                 const me = this;
                 axios.post(process.env.VUE_APP_BACKEND + 'api/border/cross/add', {
                     body: me.sendObject
@@ -79,6 +77,7 @@
                         this.generated = true;
                     })
                     .catch(e => {
+                        //TODO  Remove wrong error handling
                         console.log(e);
                         this.generated = true;
                     });

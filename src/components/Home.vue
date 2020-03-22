@@ -52,7 +52,8 @@
     </form>
 
     <div style="text-align: center; margin-top: 30px; margin-bottom: 50px">
-      <button @click.stop="loadForm" type="button" class="btn btn-primary">Start</button>
+      <p style="color: red" v-if="!valid">Please fill out every field</p>
+      <button :disabled="!valid" @click.stop="loadForm" type="button" class="btn btn-primary">Start</button>
     </div>
 
 
@@ -72,6 +73,7 @@ export default {
       transits: [],
       start: {},
       destination: {},
+      valid: false,
     }
   },
   mounted: function() {
@@ -79,6 +81,9 @@ export default {
     this.filterCountries();
   },
   methods: {
+    output() {
+      console.log(this.start.date);
+    },
     addTransit() {
       if(this.countriesFiltered.length > 0) {
         this.transits.push({country: this.countriesFiltered[0].id, date: null});
@@ -115,9 +120,37 @@ export default {
       for (var i = 0; i < this.transits.length; i++)
         this.countriesFiltered.splice(this.countriesFiltered.findIndex(c => c.id === this.transits[i].country), 1);
     },
+    validate() {
+      if (this.start.country === undefined || this.start.country === null || this.start.country === '') {
+        this.valid = false;
+        return false;
+      }
+      if (this.start.date === undefined || this.start.date === null || this.start.date === '') {
+        this.valid = false;
+        return false;
+      }
+      if (this.destination.country === undefined || this.destination.country === null || this.destination.country === '') {
+        this.valid = false;
+        return false;
+      }
+      if (this.destination.date === undefined || this.destination.date === null || this.destination.date === '') {
+        this.valid = false;
+        return false;
+      }
+      for (let transit of this.transits) {
+        if (transit.country === undefined || transit.country === null || transit.country === '') {
+          this.valid = false;
+          return false;
+        }
+        if (transit.date === undefined || transit.date === null || transit.date === '') {
+          this.valid = false;
+          return false;
+        }
+      }
+      this.valid = true;
+      return true;
+    },
     loadForm() {
-      //TODO Validation
-
       axios.post(process.env.VUE_APP_BACKEND + 'api/form/field/list', {
         body: this.start.country
       })
@@ -151,14 +184,26 @@ export default {
     },
   },
   watch: {
-    start: function() {
-      this.filterCountries();
-    },
-    destination: function() {
-      this.filterCountries();
-    },
-    transits: function() {
+    start: {
+      deep: true,
+      handler: function() {
         this.filterCountries();
+        this.validate();
+      },
+    },
+    destination: {
+      deep: true,
+      handler: function() {
+        this.filterCountries();
+        this.validate();
+      },
+    },
+    transits: {
+      deep: true,
+      handler: function() {
+        this.filterCountries();
+        this.validate();
+      }
     },
   },
 }
