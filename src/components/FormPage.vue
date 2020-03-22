@@ -14,6 +14,7 @@
         </div>
 
         <div style="text-align: center; margin-top: 30px; margin-bottom: 30px">
+            <p style="color: red" v-if="!valid">Please fill out every field</p>
             <button @click.stop="generateQr" class="btn btn-primary">Generate QR-Code</button>
         </div>
         <div style="text-align: center; margin-top: 30px; margin-bottom: 30px" v-if="generated">
@@ -45,14 +46,33 @@
             return {
                 codeId: '',
                 generated: false,
+                valid: true,
             }
         },
         mounted: function() {
         },
         methods: {
+            validate() {
+                let valid = this.validateIterate(this.sendObject);
+                this.valid = valid;
+                return valid;
+            },
+            validateIterate(obj) {
+                for (let key of Object.keys(obj)) {
+                    if (typeof obj[key] === 'object') {
+                        return this.validateIterate(obj[key]);
+                    } else {
+                        if (obj[key] === '') {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            },
             generateQr() {
-                //TODO Validate
-
+                if (!this.validate()) {
+                    return;
+                }
                 this.sendObject['Tour'] = [];
                 var tourArray = [];
                 tourArray.push(this.start);

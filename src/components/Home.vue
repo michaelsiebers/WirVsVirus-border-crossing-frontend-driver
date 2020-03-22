@@ -52,8 +52,8 @@
     </form>
 
     <div style="text-align: center; margin-top: 30px; margin-bottom: 50px">
-      <p style="color: red" v-if="!valid">Please fill out every field</p>
-      <button :disabled="!valid" @click.stop="loadForm" type="button" class="btn btn-primary">Start</button>
+      <p style="color: red" v-if="!valid">Please fill out every field correctly</p>
+      <button @click.stop="loadForm" type="button" class="btn btn-primary">Start</button>
     </div>
 
 
@@ -73,7 +73,7 @@ export default {
       transits: [],
       start: {},
       destination: {},
-      valid: false,
+      valid: true,
     }
   },
   mounted: function() {
@@ -81,9 +81,6 @@ export default {
     this.filterCountries();
   },
   methods: {
-    output() {
-      console.log(this.start.date);
-    },
     addTransit() {
       if(this.countriesFiltered.length > 0) {
         this.transits.push({country: this.countriesFiltered[0].id, date: null});
@@ -98,11 +95,11 @@ export default {
     loadCountries() {
       axios.get(process.env.VUE_APP_BACKEND + 'api/country/list')
               .then(response => {
-                console.log(response);
                 response.forEach(c => this.countries.push({id: c.pkey, name: c.countryname}))
               })
               .catch(e => {
                 console.log(e);
+                alert("An error occured. Please reload the page.");
               });
       this.countries.push({id: '0', name: 'Germany'});
       this.countries.push({id: '1', name: 'France'});
@@ -151,6 +148,9 @@ export default {
       return true;
     },
     loadForm() {
+      if (!this.validate()) {
+        return;
+      }
       axios.post(process.env.VUE_APP_BACKEND + 'api/form/field/list', {
         body: this.start.country
       })
@@ -164,7 +164,11 @@ export default {
                 driver.forEach(f => delete f.forEntity);
                 driver.forEach(f => delete f.country);
                 driver.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
-                var fields = [{name: 'Driver', fields: driver}, {name: 'Company', fields: company}];
+                var car = response.filter(f => f.forEntity === 'CarRegistration');
+                car.forEach(f => delete f.forEntity);
+                car.forEach(f => delete f.country);
+                car.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
+                var fields = [{name: 'Driver', fields: driver}, {name: 'Company', fields: company}, {name: 'Car', fields: car}];
                 this.routeToForm(this.countries, this.start, this.destination, this.transits, fields);
               })
               .catch(e => {
@@ -173,9 +177,10 @@ export default {
                 var sendObject = {};
                 for (let category of gFields ) {
                   sendObject[category.name] = {};
-
+                  for (let field of category.fields) {
+                    sendObject[category.name][field.name] = '';
+                  }
                 }
-                console.log(gFields);
                 this.routeToForm(this.countries, this.start, this.destination, this.transits, gFields, sendObject);
               });
     },
@@ -188,21 +193,18 @@ export default {
       deep: true,
       handler: function() {
         this.filterCountries();
-        this.validate();
       },
     },
     destination: {
       deep: true,
       handler: function() {
         this.filterCountries();
-        this.validate();
       },
     },
     transits: {
       deep: true,
       handler: function() {
         this.filterCountries();
-        this.validate();
       }
     },
   },
