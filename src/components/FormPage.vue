@@ -95,7 +95,6 @@
             },
             uploadObject() {
                 const me = this;
-                console.log(JSON.stringify(me.sendObject));
                 axios.post(this.apiurl + 'api/border/cross/add', {
                     body: "[" + JSON.stringify(me.sendObject) + "]"
                 })
