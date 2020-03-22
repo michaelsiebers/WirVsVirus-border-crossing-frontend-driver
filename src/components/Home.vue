@@ -71,11 +71,11 @@
         start: {},
         destination: {},
         valid: true,
+        apiurl: 'http://api.esp-test.de/',
       }
     },
     mounted: function() {
       this.loadCountries();
-      this.filterCountries();
     },
     methods: {
       addTransit() {
@@ -90,19 +90,17 @@
         this.transits.splice(this.transits.findIndex(t => t.country === country), 1);
       },
       loadCountries() {
-        axios.get(process.env.VUE_APP_BACKEND + 'api/country/list')
+        const URL = this.apiurl + 'api/country/list';
+        console.log(URL);
+        axios.get(URL)
                 .then(response => {
-                  response.forEach(c => this.countries.push({id: c.pkey, name: c.countryname}))
+                  response.data.forEach(c => this.countries.push({id: c.pkey, name: c.countryname}))
+                  this.filterCountries();
                 })
                 .catch(e => {
-                  //TODO Remove wrong Error Handling
                   console.log(e);
                   alert("An error occured. Please reload the page.");
                 });
-        this.countries.push({id: '0', name: 'Germany'});
-        this.countries.push({id: '1', name: 'France'});
-        this.countries.push({id: '2', name: 'Poland'});
-        this.countries.push({id: '3', name: 'Switzerland'});
       },
       filterCountries() {
         this.countriesFiltered = [].concat(this.countries);
@@ -150,43 +148,40 @@
           return;
         }
         var me = this;
-        this.getFields(this.start.country,function(response) {
-          var gFields = me.mapFieldResponse(response);
-          var sendObject = me.prepareSendObject(gFields);
-          this.routeToForm(me.countries, me.start, me.destination, me.transits, gFields, sendObject);
-        }, function() {
-          alert("An error occured. Please reload the page.");
-          //TODO Remove Wrong Error Handling
-          var gFields = [{name: 'Driver', fields: [{name: 'Name', datatype: 'text'}, {name: 'Age', datatype: 'number'}]}, {name: 'Company', fields: [{name: 'Name', datatype: 'text'}, {name: 'Street Number', datatype: 'number'}]}];
+        this.getFields(this.start.country,function(data) {
+          var gFields = me.mapFieldResponse(data);
           var sendObject = me.prepareSendObject(gFields);
           me.routeToForm(me.countries, me.start, me.destination, me.transits, gFields, sendObject);
+        }, function() {
+          alert("An error occured. Please reload the page.");
         });
       },
       getFields(country, success, failure) {
-        axios.post(process.env.VUE_APP_BACKEND + 'api/form/field/list', {
-          body: country
+        axios.post(this.apiurl + 'api/form/field/list', {
+          body: { "uuid" : country }
         })
                 .then(response => {
-                  success(response);
+                  success(response.data);
                 })
                 .catch(e => {
                   console.log(e);
                   failure();
                 });
       },
-      mapFieldResponse(response) {
-        var company = response.filter(f => f.forEntity === 'Company');
+      mapFieldResponse(data) {
+        var company = data.filter(f => f.forEntity === 'Company');
         company.forEach(f => delete f.forEntity);
         company.forEach(f => delete f.country);
         company.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
-        var driver = response.filter(f => f.forEntity === 'Driver');
+        var driver = data.filter(f => f.forEntity === 'Driver');
         driver.forEach(f => delete f.forEntity);
         driver.forEach(f => delete f.country);
         driver.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
-        var car = response.filter(f => f.forEntity === 'CarRegistration');
+        var car = data.filter(f => f.forEntity === 'Carregistration');
         car.forEach(f => delete f.forEntity);
         car.forEach(f => delete f.country);
         car.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
+        console.log(car);
         var gFields = [{name: 'Driver', fields: driver}, {name: 'Company', fields: company}, {name: 'Car', fields: car}];
         return gFields;
       },

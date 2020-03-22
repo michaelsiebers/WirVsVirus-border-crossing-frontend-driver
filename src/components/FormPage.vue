@@ -47,6 +47,7 @@
                 codeId: '',
                 generated: false,
                 valid: true,
+                apiurl: 'http://api.esp-test.de/',
             }
         },
         mounted: function() {
@@ -94,21 +95,19 @@
             },
             uploadObject() {
                 const me = this;
-                axios.post(process.env.VUE_APP_BACKEND + 'api/border/cross/add', {
-                    body: me.sendObject
+                axios.post(this.apiurl + 'api/border/cross/add', {
+                    body: JSON.stringify(me.sendObject)
                 })
                     .then(response => {
                         if (response.success === 'true') {
-                            this.codeId = response.tour;
+                            this.codeId = response.data.tour;
                             this.generated = true;
                         } else {
                             alert("Something went wrong. Please reload the page");
                         }
                     })
                     .catch(e => {
-                        //TODO  Remove wrong error handling
                         console.log(e);
-                        this.generated = true;
                         alert("Something went wrong. Please reload the page");
                     });
             },
