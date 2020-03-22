@@ -47,7 +47,7 @@
                 codeId: '',
                 generated: false,
                 valid: true,
-                apiurl: 'http://api.esp-test.de/',
+                apiurl: 'https://api.esp-test.de/',
             }
         },
         mounted: function() {
@@ -95,11 +95,12 @@
             },
             uploadObject() {
                 const me = this;
+                console.log(JSON.stringify(me.sendObject));
                 axios.post(this.apiurl + 'api/border/cross/add', {
-                    body: JSON.stringify(me.sendObject)
+                    body: "[" + JSON.stringify(me.sendObject) + "]"
                 })
                     .then(response => {
-                        if (response.success === 'true') {
+                        if (response.data.success) {
                             this.codeId = response.data.tour;
                             this.generated = true;
                         } else {

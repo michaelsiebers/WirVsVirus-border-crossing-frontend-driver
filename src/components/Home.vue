@@ -71,7 +71,7 @@
         start: {},
         destination: {},
         valid: true,
-        apiurl: 'http://api.esp-test.de/',
+        apiurl: 'https://api.esp-test.de/',
       }
     },
     mounted: function() {
@@ -91,7 +91,6 @@
       },
       loadCountries() {
         const URL = this.apiurl + 'api/country/list';
-        console.log(URL);
         axios.get(URL)
                 .then(response => {
                   response.data.forEach(c => this.countries.push({id: c.pkey, name: c.countryname}))
@@ -181,7 +180,6 @@
         car.forEach(f => delete f.forEntity);
         car.forEach(f => delete f.country);
         car.forEach(f => (f.datatype === 'integer' ? f.datatype = 'number' : f.datatype = 'text'));
-        console.log(car);
         var gFields = [{name: 'Driver', fields: driver}, {name: 'Company', fields: company}, {name: 'Car', fields: car}];
         return gFields;
       },
