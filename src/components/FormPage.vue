@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3 style="text-align: center">Please Fill Out the Following Information</h3>
+        <h3 id="headline">Please Fill Out the Following Information</h3>
         <div class="card" v-for="(category, index) in gFields" :key="index">
             <div class="card-body">
                 <h5 class="card-title">{{category.name}} Information</h5>
@@ -13,11 +13,11 @@
             </div>
         </div>
 
-        <div style="text-align: center; margin-top: 30px; margin-bottom: 30px">
-            <p style="color: red" v-if="!valid">Please fill out every field</p>
-            <button @click.stop="generateQr" class="btn btn-primary">Generate QR-Code</button>
+        <div id="upload">
+            <p style="color: red" v-if="!valid">Please fill out every field correctly</p>
+            <button @click.stop="upload" class="btn btn-primary">Generate QR-Code</button>
         </div>
-        <div style="text-align: center; margin-top: 30px; margin-bottom: 30px" v-if="generated">
+        <div id="qr" v-if="generated">
             <p>Use this code to identify at the border</p>
             <qrcode-vue id="cnv" :value="codeId" size="300"></qrcode-vue>
             <button @click.stop="downloadQR" class="btn btn-primary">Download</button>
@@ -69,10 +69,14 @@
                 }
                 return true;
             },
-            generateQr() {
+            upload() {
                 if (!this.validate()) {
                     return;
                 }
+                this.prepareObject();
+                this.uploadObject();
+            },
+            prepareObject() {
                 this.sendObject['Tour'] = [];
                 var tourArray = [];
                 tourArray.push(this.start);
@@ -87,21 +91,26 @@
                     this.sendObject.Tour.push({ridefrom: rideFrom, rideto: rideTo, date: date});
                     j++;
                 }
+            },
+            uploadObject() {
                 const me = this;
                 axios.post(process.env.VUE_APP_BACKEND + 'api/border/cross/add', {
                     body: me.sendObject
                 })
                     .then(response => {
-                        //TODO Get ID for QR Code
-                        this.codeId = response.id;
-                        this.generated = true;
+                        if (response.success === 'true') {
+                            this.codeId = response.tour;
+                            this.generated = true;
+                        } else {
+                            alert("Something went wrong. Please reload the page");
+                        }
                     })
                     .catch(e => {
                         //TODO  Remove wrong error handling
                         console.log(e);
                         this.generated = true;
+                        alert("Something went wrong. Please reload the page");
                     });
-
             },
             downloadQR() {
                 var canvas = document.getElementById('cnv').firstChild;
@@ -124,5 +133,17 @@
 </script>
 
 <style scoped>
-
+    #qr {
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    #upload {
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+    #headline {
+        text-align: center;
+    }
 </style>
