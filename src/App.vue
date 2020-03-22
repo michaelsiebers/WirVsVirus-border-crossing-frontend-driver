@@ -1,14 +1,8 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <ul class="nav">
-      <li class="nav-item">
-        <router-link class="nav-link active" :to="{ name: 'landingPage'}">LogIn</router-link>
-      </li>
-      <li class="nav-item">
-        <router-link class="nav-link active" :to="{ name: 'formPage'}">Form</router-link>
-      </li>
-    </ul>
+    <div id="logo">
+      <img alt="Logo" src="./assets/bc-logo.svg" width="250">
+    </div>
     <router-view></router-view>
   </div>
 </template>
@@ -16,17 +10,14 @@
 <script>
 
 export default {
-  name: 'App'
+  name: 'App',
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+#logo {
   text-align: center;
-  color: #2c3e50;
   margin-top: 60px;
+  margin-bottom: 60px;
 }
 </style>
