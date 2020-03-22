@@ -27,7 +27,8 @@ const router = new VueRouter({
       name: 'notFound',
       component: NotFound,
     }
-  ]
+  ],
+  mode: 'history',
 });
 
 
