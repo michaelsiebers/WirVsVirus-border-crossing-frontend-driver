@@ -14,21 +14,65 @@ const router = new VueRouter({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
+      meta: {
+        title: 'Driver | Fast Border Crossing',
+        // metaTags: [
+        //   {
+        //     name: 'description',
+        //     content: 'The home page of our example app.'
+        //   },
+        //   {
+        //     property: 'og:description',
+        //     content: 'The home page of our example app.'
+        //   }
+        // ]
+      }
     },
     {
       path: '/formPage/',
       name: 'formPage',
       component: FormPage,
       props: true,
+      meta: {
+        title: 'Form | Fast Border Crossing',
+        // metaTags: [
+        //   {
+        //     name: 'description',
+        //     content: 'The home page of our example app.'
+        //   },
+        //   {
+        //     property: 'og:description',
+        //     content: 'The home page of our example app.'
+        //   }
+        // ]
+      }
     },
     {
       path: '*',
       name: 'notFound',
       component: NotFound,
+      meta: {
+        title: 'Not Found | Fast Border Crossing',
+        // metaTags: [
+        //   {
+        //     name: 'description',
+        //     content: 'The home page of our example app.'
+        //   },
+        //   {
+        //     property: 'og:description',
+        //     content: 'The home page of our example app.'
+        //   }
+        // ]
+      }
     }
   ],
   mode: 'history',
+});
+
+router.beforeEach((to, from, next) => {
+  document.title = to.meta.title
+  next()
 });
 
 
